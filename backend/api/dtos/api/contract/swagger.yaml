@@ -1,0 +1,242 @@
+swagger: "2.0"
+info:
+  description: "REST API for controlling warehouse robots"
+  version: "1.0.0"
+  title: "Warehouse Robot Control API"
+host: "localhost:8080"
+basePath: "/api"
+schemes:
+  - "http"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+
+paths:
+  /v1/robots:
+    get:
+      tags:
+        - "robots"
+      summary: "Get all robot details"
+      responses:
+        200:
+          description: "Successfully retrieved robots list"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/RobotInfo"
+
+  /v1/robots/{robotId}:
+    get:
+      tags:
+        - "robots"
+      summary: "Get robot by ID"
+      description: "Retrieve information about a specific robot"
+      parameters:
+        - name: "robotId"
+          in: "path"
+          description: "Robot identifier"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Successfully retrieved robot information"
+          schema:
+            $ref: "#/definitions/RobotInfo"
+        404:
+          description: "Robot not found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /v1/robots/{robotId}/tasks:
+    post:
+      tags:
+        - "robots"
+        - "tasks"
+      summary: "Create task for robot"
+      description: "Send movement commands to a robot"
+      parameters:
+        - name: "robotId"
+          in: "path"
+          description: "Robot identifier"
+          required: true
+          type: "string"
+        - name: "body"
+          in: "body"
+          description: "Movement commands"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateTaskRequest"
+      responses:
+        201:
+          description: "Task created successfully"
+          schema:
+            $ref: "#/definitions/TaskInfo"
+        400:
+          description: "Invalid request - commands contain invalid characters"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: "Robot not found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        422:
+          description: "Validation failed - out of bounds or position occupied"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /v1/tasks/{taskId}:
+    get:
+      tags:
+        - "tasks"
+      summary: "Get task status"
+      description: "Retrieve the status of a specific task"
+      parameters:
+        - name: "taskId"
+          in: "path"
+          description: "Task identifier"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Successfully retrieved task information"
+          schema:
+            $ref: "#/definitions/TaskInfo"
+        404:
+          description: "Task not found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+    delete:
+      tags:
+        - "tasks"
+      summary: "Cancel task"
+      description: "Cancel a running or queued task"
+      parameters:
+        - name: "taskId"
+          in: "path"
+          description: "Task identifier"
+          required: true
+          type: "string"
+      responses:
+        204:
+          description: "Task cancelled successfully"
+        404:
+          description: "Task not found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        409:
+          description: "Conflict - task already processed"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+definitions:
+  RobotInfo:
+    type: "object"
+    required:
+      - "id"
+      - "position"
+    properties:
+      id:
+        type: "string"
+        description: "Robot identifier"
+        example: "robot-1"
+      position:
+        $ref: "#/definitions/RobotState"
+      status:
+        $ref: "#/definitions/RobotState"
+
+  RobotState:
+    type: "object"
+    required:
+      - "x"
+      - "y"
+      - "hasCrate"
+    properties:
+      x:
+        type: "integer"
+        format: "uint32"
+        minimum: 0
+        maximum: 9
+        description: "X coordinate (0-9)"
+        example: 2
+      y:
+        type: "integer"
+        format: "uint32"
+        minimum: 0
+        maximum: 9
+        description: "Y coordinate (0-9)"
+        example: 3
+      hasCrate:
+        type: "boolean"
+        description: "Whether robot is carrying a crate"
+        example: false
+
+  CreateTaskRequest:
+    type: "object"
+    required:
+      - "key"
+      - "commands"
+    properties:
+      key:
+        type: "UUID"
+        description: "Client side generated UUID key to identify the task. So backend can ignore the task if this key has been processed"
+      commands:
+        type: "string"
+        description: "Movement commands (N=North, S=South, E=East, W=West)"
+        pattern: "^[NWES]+$"
+        example: "N E E S W"
+
+  TaskInfo:
+    type: "object"
+    required:
+      - "id"
+      - "status"
+      - "robotId"
+      - "commands"
+    properties:
+      id:
+        type: "string"
+        description: "Task identifier"
+        example: "task_robot-1_1692876000000"
+      status:
+        type: "string"
+        description: "Current task status"
+        enum:
+          - "QUEUED"
+          - "IN_PROGRESS"
+          - "COMPLETED"
+          - "FAILED"
+          - "CANCELLED"
+        example: "IN_PROGRESS"
+      robotId:
+        type: "string"
+        description: "Robot identifier"
+        example: "robot-1"
+      commands:
+        type: "string"
+        description: "Movement commands"
+        example: "N E E S W"
+      error:
+        type: "string"
+        description: "Error message if task failed"
+        example: "Robot would move out of bounds"
+
+  ErrorResponse:
+    type: "object"
+    required:
+      - "code"
+      - "message"
+    properties:
+      code:
+        type: "string"
+        description: "Error code"
+        example: "OUT_OF_BOUNDS"
+      message:
+        type: "string"
+        description: "Error message"
+        example: "Commands would move robot out of warehouse bounds"
+      details:
+        type: "string"
+        description: "Additional error details"
+        example: "Robot at (0,0) cannot move South"
