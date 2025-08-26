@@ -9,15 +9,9 @@ import (
 
 // RobotState represents the state of a facades in API responses
 type RobotState struct {
-	X        uint
-	Y        uint
-	HasCrate bool
-}
-
-// RobotInfo represents a facades in API responses
-type RobotInfo struct {
-	ID       string
-	Position RobotState
+	X        uint `json:"x"`
+	Y        uint `json:"y"`
+	HasCrate bool `json:"has_crate"`
 }
 
 // CreateTaskRequest is the payload for creating a facades task
@@ -39,9 +33,9 @@ type TaskInfo struct {
 
 // ErrorResponse is the standard error response
 type ErrorResponse struct {
-	Code    string
-	Message string
-	Details string
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Details string `json:"details"`
 }
 
 // TaskStatus represents the status of a task
