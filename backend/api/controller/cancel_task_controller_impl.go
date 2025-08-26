@@ -4,23 +4,24 @@ import (
 	"net/http"
 	"warehouse-robots/backend/api/constant"
 	"warehouse-robots/backend/api/helper"
-	retrieveTask "warehouse-robots/backend/api/service"
+	cancelTask "warehouse-robots/backend/api/service"
 )
 
-type RetrieveTaskControllerImpl struct {
-	Service retrieveTask.IRetrieveTaskService
+type CancelTaskControllerImpl struct {
+	Service cancelTask.ICancelTaskService
 	Helper  *helper.ControllerHelper
 }
 
-// NewRetrieveTaskController constructor
-func NewRetrieveTaskController(service retrieveTask.IRetrieveTaskService) IRetrieveTaskController {
-	return &RetrieveTaskControllerImpl{
+// NewCancelTaskController constructor
+func NewCancelTaskController(service cancelTask.ICancelTaskService) ICancelTaskController {
+	return &CancelTaskControllerImpl{
 		Service: service,
 		Helper:  helper.NewControllerHelper(),
 	}
 }
 
-func (c *RetrieveTaskControllerImpl) Handle(w http.ResponseWriter, r *http.Request) {
+// Handle cancel controller handler
+func (c *CancelTaskControllerImpl) Handle(w http.ResponseWriter, r *http.Request) {
 	// Get task id from request url.
 	taskId := r.PathValue("taskId")
 
@@ -30,7 +31,8 @@ func (c *RetrieveTaskControllerImpl) Handle(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	taskInfo, err := c.Service.RetrieveTaskById(taskId)
+	// call service layer
+	err := c.Service.CancelTaskById(taskId)
 
 	if err != nil {
 		// Map error to appropriate HTTP status and error code
@@ -39,6 +41,6 @@ func (c *RetrieveTaskControllerImpl) Handle(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Return successful response (use 200 OK for GET requests)
-	c.Helper.SendSuccessResponse(w, http.StatusOK, taskInfo)
+	// Return successful response (use 204 OK for Delete requests)
+	c.Helper.SendNoContentResponse(w)
 }

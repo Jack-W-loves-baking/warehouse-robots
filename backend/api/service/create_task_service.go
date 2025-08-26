@@ -21,6 +21,11 @@ type ICreateTaskService interface {
 	//
 	// Returns:
 	//   - TaskInfo snapshot of the newly created task on success.
-	//   - error describing validation, lookup, SDK, or persistence failures.
+	//
+	// Error Returns
+	//	 - ErrRobotNotFound: robot not found
+	//   - ErrTaskNotFound: task not found by the robot id
+	//   - ErrTaskQueueFull: task is pending, but we want to queue another one.
+	//	 - ErrBoundary: the robot will move out of the boundary if execute the given command.
 	CreateTask(robotID string, req dtos.CreateTaskRequest) (*dtos.TaskInfo, error)
 }

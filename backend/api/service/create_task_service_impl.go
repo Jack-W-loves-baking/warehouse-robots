@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -38,34 +39,26 @@ func NewCreateTaskService(
 }
 
 // CreateTask validates and enqueues a new task for the given robot.
-//
-// Flow:
-//  1. Resolve the robot by ID. (here we just simply use the index)
-//  2. Read prior tasks for the robot and compute a starting position
-//     (reject if there is an active task).
-//  3. Validate that the provided command sequence keeps the robot within bounds.
-//  4. Enqueue the commands via the SDK and create a PENDING task record.
-//  5. Start background monitoring to update status/position as the SDK streams.
-//
 // Returns a TaskInfo snapshot for the newly created task or an error.
 func (s *CreateTaskServiceImpl) CreateTask(robotID string, req dtos.CreateTaskRequest) (*dtos.TaskInfo, error) {
 	robot, err := s.getRobotByID(robotID)
 	if err != nil {
-		return nil, fmt.Errorf("robot not found: %w", err)
+		log.Printf("robot not found: %w", err)
+		return nil, model.ErrRobotNotFound
 	}
 
 	tasks, err := s.repository.GetByRobotId(robotID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve tasks: %w", err)
+		return nil, model.ErrTaskNotFound
 	}
 
 	startPos, err := s.calculateStartPosition(robotID, tasks)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create task: %w", err)
+		return nil, err
 	}
 
 	if err := s.validateBoundary(startPos, req.Commands); err != nil {
-		return nil, fmt.Errorf("boundary validation failed: %w", err)
+		return nil, err
 	}
 
 	taskID, posCh, errCh := robot.EnqueueTask(req.Commands)
@@ -83,7 +76,8 @@ func (s *CreateTaskServiceImpl) CreateTask(robotID string, req dtos.CreateTaskRe
 	if err := s.repository.Create(task); err != nil {
 		// The SDK has already accepted the task; still start monitoring, but return the persistence error.
 		s.taskMonitor.StartMonitoring(taskID, posCh, errCh)
-		return nil, fmt.Errorf("failed to store task (already enqueued in SDK): %w", err)
+		log.Printf("repo.Create task=%s robot=%s failed: %v", taskID, robotID, err)
+		return nil, err
 	}
 
 	s.taskMonitor.StartMonitoring(taskID, posCh, errCh)
@@ -118,15 +112,15 @@ func (s *CreateTaskServiceImpl) getRobotByID(robotID string) (model.Robot, error
 // Policy:
 //   - Only one active task per robot is allowed; if a PENDING/RUNNING task exists, reject.
 //   - Use the most recent TERMINAL task to derive the next start:
-//   - COMPLETED or FAILED → use its last known CurrentPosition.
-//   - CANCELLED           → ignore and continue searching.
+//   - COMPLETED or FAILED or CANCELLED → use its last known CurrentPosition.
 //   - If no prior task exists, default to (0,0,false).
 //
 // Returns the computed starting position or an error if the request should be rejected.
 func (s *CreateTaskServiceImpl) calculateStartPosition(robotID string, tasks []*model.Task) (*model.Position, error) {
 	for _, task := range tasks {
-		if task.Status == model.TaskStatusPending || task.Status == model.TaskStatusRunning {
-			return nil, fmt.Errorf("robot %s has an active task in progress", robotID)
+		if task.Status == model.TaskStatusPending {
+			log.Printf("task %s is pending", task.TaskID)
+			return nil, model.ErrTaskQueueFull
 		}
 	}
 
@@ -136,7 +130,7 @@ func (s *CreateTaskServiceImpl) calculateStartPosition(robotID string, tasks []*
 
 	for _, task := range tasks {
 		switch task.Status {
-		case model.TaskStatusCompleted, model.TaskStatusFailed:
+		case model.TaskStatusCompleted, model.TaskStatusFailed, model.TaskStatusCancelled:
 			if task.CurrentPosition != nil {
 				return &model.Position{
 					X:        task.CurrentPosition.X,
@@ -144,8 +138,6 @@ func (s *CreateTaskServiceImpl) calculateStartPosition(robotID string, tasks []*
 					HasCrate: task.CurrentPosition.HasCrate,
 				}, nil
 			}
-		case model.TaskStatusCancelled:
-			continue
 		}
 	}
 
@@ -180,33 +172,23 @@ func (s *CreateTaskServiceImpl) validateBoundary(start *model.Position, commands
 			x++
 		case 'W':
 			x--
-		default:
-			return fmt.Errorf("invalid command '%c' at position %d", cmd, i)
 		}
 
 		if x < minX {
-			return fmt.Errorf(
-				"boundary violation: command '%c' at index %d would move robot out of bounds (too far WEST): (%d,%d)->(%d,%d), x_min=%d",
-				cmd, i, originalX, originalY, x, y, minX,
-			)
+
+			return model.ErrBoundary
 		}
 		if x > maxX {
-			return fmt.Errorf(
-				"boundary violation: command '%c' at index %d would move robot out of bounds (too far EAST): (%d,%d)->(%d,%d), x_max=%d",
-				cmd, i, originalX, originalY, x, y, maxX,
-			)
+			log.Printf("boundary violation: command '%c' at index %d would move robot out of bounds (too far WEST): (%d,%d)->(%d,%d), x_min=%d", cmd, i, originalX, originalY, x, y, minX)
+			return model.ErrBoundary
 		}
 		if y < minY {
-			return fmt.Errorf(
-				"boundary violation: command '%c' at index %d would move robot out of bounds (too far SOUTH): (%d,%d)->(%d,%d), y_min=%d",
-				cmd, i, originalX, originalY, x, y, minY,
-			)
+			log.Printf("boundary violation: command '%c' at index %d would move robot out of bounds (too far SOUTH): (%d,%d)->(%d,%d), x_min=%d", cmd, i, originalX, originalY, x, y, minX)
+			return model.ErrBoundary
 		}
 		if y > maxY {
-			return fmt.Errorf(
-				"boundary violation: command '%c' at index %d would move robot out of bounds (too far NORTH): (%d,%d)->(%d,%d), y_max=%d",
-				cmd, i, originalX, originalY, x, y, maxY,
-			)
+			log.Printf("boundary violation: command '%c' at index %d would move robot out of bounds (too far NORTH): (%d,%d)->(%d,%d), x_min=%d", cmd, i, originalX, originalY, x, y, minX)
+			return model.ErrBoundary
 		}
 	}
 

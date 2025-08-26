@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"warehouse-robots/backend/api/dao"
 	"warehouse-robots/backend/api/dtos"
 	"warehouse-robots/backend/api/model"
@@ -26,7 +25,7 @@ func NewRetrieveTaskService(repository dao.ITaskRepository) IRetrieveTaskService
 func (s *RetrieveTaskServiceImpl) RetrieveTaskById(taskId string) (*dtos.TaskInfo, error) {
 	task, err := s.repository.GetById(taskId)
 	if err != nil {
-		return nil, fmt.Errorf("task not found: %w", err)
+		return nil, model.ErrTaskNotFound
 	}
 
 	taskInfo := &dtos.TaskInfo{

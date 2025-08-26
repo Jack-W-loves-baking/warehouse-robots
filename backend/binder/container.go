@@ -28,10 +28,12 @@ type Container struct {
 	// Service Layer
 	CreateTaskService   service.ICreateTaskService
 	RetrieveTaskService service.IRetrieveTaskService
+	CancelTaskService   service.ICancelTaskService
 
 	// Controller Layer
 	CreateTaskController   controller.ICreateTaskController
 	RetrieveTaskController controller.IRetrieveTaskController
+	CancelTaskController   controller.ICancelTaskController
 }
 
 // NewContainer creates and wires all dependencies

@@ -24,6 +24,7 @@ func main() {
 
 	mux.HandleFunc(constant.RouteCreateTask, container.CreateTaskController.Handle)
 	mux.HandleFunc(constant.RouteGetTaskById, container.RetrieveTaskController.Handle)
+	mux.HandleFunc(constant.RouteDeleteTaskById, container.CancelTaskController.Handle)
 
 	// Apply middleware stack with configuration
 	handler := middleware.Chain(mux,

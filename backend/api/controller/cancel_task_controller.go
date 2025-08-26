@@ -2,17 +2,17 @@ package controller
 
 import "net/http"
 
-// IRetrieveTaskController handles HTTP requests to retrieve a task information.
+// ICancelTaskController handles HTTP requests to cancel a task.
 //
-// GET Request:
+// DELETE Request:
 //   - Path:   taskId resolved via r.PathValue("taskId").
 //
 // Responses:
-//   - 200 Success: if we successfully get the TaskInfo.
+//   - 204 No Content: if we successfully delete the running task.
 //   - 404 Bad Request: Task id not found in the database.
 //   - 500 Internal Server Error: unexpected failures.
 //
 // The controller translates service-layer errors into appropriate HTTP responses.
-type IRetrieveTaskController interface {
+type ICancelTaskController interface {
 	Handle(w http.ResponseWriter, r *http.Request)
 }

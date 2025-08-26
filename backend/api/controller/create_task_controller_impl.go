@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"warehouse-robots/backend/api/constant"
@@ -31,21 +32,7 @@ func NewCreateTaskController(service createTask.ICreateTaskService) ICreateTaskC
 	}
 }
 
-// Handle processes POST /robots/{robotId}/tasks requests.
-//
-// Request:
-//   - Path:   robotId (string) resolved via r.PathValue("robotId").
-//   - Body:   dtos.CreateTaskRequest (JSON).
-//
-// Responses:
-//   - 201 Created: on successful creation, returns dtos.TaskInfo.
-//   - 400 Bad Request: invalid JSON or invalid command sequence.
-//   - 409 Conflict: the robot is working and task cannot be cancelled.
-//   - 429 Too many requests: the queue has not Terminated, so we cannot queue a new task.
-//   - 503 Service Unavailable: no robots available.
-//   - 500 Internal Server Error: unexpected failures.
-//
-// Error bodies are standardized via ControllerHelper.
+// Handle for the endpoint
 func (c *CreateTaskControllerImpl) Handle(w http.ResponseWriter, r *http.Request) {
 	robotId := r.PathValue("robotId")
 
@@ -62,9 +49,11 @@ func (c *CreateTaskControllerImpl) Handle(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// call service layer.
 	taskInfo, err := c.Service.CreateTask(robotId, req)
+
 	if err != nil {
-		statusCode, errorCode := c.mapErrorToHTTPStatus(err)
+		statusCode, errorCode := helper.MapErrorToHTTPStatus(err)
 		c.Helper.SendErrorResponse(w, statusCode, errorCode, err.Error(), "")
 		return
 	}
@@ -78,6 +67,7 @@ func (c *CreateTaskControllerImpl) validateCommands(commands string) error {
 	commands = strings.ToUpper(strings.ReplaceAll(commands, " ", ""))
 
 	if len(commands) == 0 {
+		log.Printf("commands cannot be empty")
 		return fmt.Errorf("commands cannot be empty")
 	}
 
@@ -87,25 +77,4 @@ func (c *CreateTaskControllerImpl) validateCommands(commands string) error {
 		}
 	}
 	return nil
-}
-
-// mapErrorToHTTPStatus translates service-layer errors into HTTP status codes
-// and system error codes used by API clients for programmatic handling.
-func (c *CreateTaskControllerImpl) mapErrorToHTTPStatus(err error) (int, string) {
-	errorMsg := err.Error()
-
-	switch {
-	case strings.Contains(errorMsg, "invalid command"):
-		return http.StatusBadRequest, constant.ErrorCodeValidation
-	case strings.Contains(errorMsg, "out of bounds"):
-		return http.StatusBadRequest, constant.ErrorCodeBoundary
-	case strings.Contains(errorMsg, "no robots"):
-		return http.StatusServiceUnavailable, constant.ErrorCodeNoRobots
-	case strings.Contains(errorMsg, "busy"):
-		return http.StatusConflict, constant.ErrorCodeRobotBusy
-	case strings.Contains(errorMsg, "queue full"):
-		return http.StatusTooManyRequests, constant.ErrorCodeTaskQueueFull
-	default:
-		return http.StatusInternalServerError, constant.ErrorCodeInternal
-	}
 }

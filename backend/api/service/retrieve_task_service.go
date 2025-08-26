@@ -10,5 +10,11 @@ import (
 type IRetrieveTaskService interface {
 	// RetrieveTaskById returns a TaskInfo snapshot for the given task ID.
 	// If the task does not exist, an error is returned.
+	// Returns
+	// - TaskInfo
+	//
+	// Error Returns:
+	// - ErrTaskNotFound: task id not found in db.
+	//
 	RetrieveTaskById(taskID string) (*dtos.TaskInfo, error)
 }
