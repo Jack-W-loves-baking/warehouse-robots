@@ -8,7 +8,6 @@ type TaskStatus string
 
 const (
 	TaskStatusPending   TaskStatus = "PENDING"
-	TaskStatusRunning   TaskStatus = "RUNNING"
 	TaskStatusCompleted TaskStatus = "COMPLETED"
 	TaskStatusFailed    TaskStatus = "FAILED"
 	TaskStatusCancelled TaskStatus = "CANCELLED"
