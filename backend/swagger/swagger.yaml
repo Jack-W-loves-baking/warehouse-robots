@@ -175,12 +175,8 @@ definitions:
   CreateTaskRequest:
     type: "object"
     required:
-      - "key"
       - "commands"
     properties:
-      key:
-        type: "UUID"
-        description: "Client side generated UUID key to identify the task. So backend can ignore the task if this key has been processed"
       commands:
         type: "string"
         description: "Movement commands (N=North, S=South, E=East, W=West)"
@@ -203,11 +199,12 @@ definitions:
         type: "string"
         description: "Current task status"
         enum:
-          - "QUEUED"
-          - "IN_PROGRESS"
-          - "COMPLETED"
-          - "FAILED"
-          - "CANCELLED"
+            - "PENDING"      # Just created
+            - "RUNNING"      # First position update received
+            - "COMPLETED"    # Channel closed successfully
+            - "FAILED"       # Error received
+            - "CANCELLED"    # User cancelled
+            - "TIMEOUT"      # Monitor timeout
         example: "IN_PROGRESS"
       robotId:
         type: "string"
@@ -221,7 +218,9 @@ definitions:
         type: "string"
         description: "Error message if task failed"
         example: "Robot would move out of bounds"
-
+      currentPosition:
+        $ref: "#/definitions/RobotState"
+          
   ErrorResponse:
     type: "object"
     required:

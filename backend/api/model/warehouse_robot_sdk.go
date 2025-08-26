@@ -1,4 +1,4 @@
-package sdk
+package model
 
 // Low level SDK functions.
 type Warehouse interface {

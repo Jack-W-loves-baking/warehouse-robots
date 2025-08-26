@@ -1,6 +1,10 @@
-package api
+package dtos
 
-// Api dtos - Request and Response objects based on swagger API specification.
+import (
+	"time"
+)
+
+// Api model - Request and Response objects based on swagger API specification.
 // Ideally this file should be auto generated.
 
 // RobotState represents the state of a facades in API responses
@@ -23,10 +27,14 @@ type CreateTaskRequest struct {
 
 // TaskInfo contains information about a facades task (single facades system)
 type TaskInfo struct {
-	ID       string
-	Status   string
-	Commands string
-	Error    string
+	TaskID       string      `json:"task_id"`
+	RobotID      string      `json:"robot_id"`
+	Commands     string      `json:"commands"`
+	Status       TaskStatus  `json:"status"`
+	CurrentState *RobotState `json:"current_state,omitempty"`
+	Error        string      `json:"error,omitempty"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // ErrorResponse is the standard error response
@@ -40,9 +48,9 @@ type ErrorResponse struct {
 type TaskStatus string
 
 const (
-	TaskStatusQueued     TaskStatus = "QUEUED"
-	TaskStatusInProgress TaskStatus = "IN_PROGRESS"
-	TaskStatusCompleted  TaskStatus = "COMPLETED"
-	TaskStatusFailed     TaskStatus = "FAILED"
-	TaskStatusCancelled  TaskStatus = "CANCELLED"
+	TaskStatusPending   TaskStatus = "PENDING"
+	TaskStatusRunning   TaskStatus = "RUNNING"
+	TaskStatusCompleted TaskStatus = "COMPLETED"
+	TaskStatusFailed    TaskStatus = "FAILED"
+	TaskStatusCancelled TaskStatus = "CANCELLED"
 )

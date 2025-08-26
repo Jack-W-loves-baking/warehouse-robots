@@ -1,7 +1,7 @@
 package sdkService
 
 import (
-	sdk "warehouse-robots/backend/api/dtos/sdk"
+	"warehouse-robots/backend/api/model"
 	"warehouse-robots/backend/config"
 	mockSdk "warehouse-robots/backend/infra/sdkService/mock"
 )
@@ -18,7 +18,7 @@ func NewRobotSDKFactory(cfg *config.Config) *RobotSDKFactory {
 }
 
 // CreateRobotSDKService creates either mock or real SDK service based on configuration
-func (f *RobotSDKFactory) CreateRobotSDKService() sdk.Warehouse {
+func (f *RobotSDKFactory) CreateRobotSDKService() model.Warehouse {
 	if f.config.Robot.EnableMock {
 		return mockSdk.NewMockWarehouse()
 	}

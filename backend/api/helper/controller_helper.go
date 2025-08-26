@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"warehouse-robots/backend/api/dtos/api"
+	"warehouse-robots/backend/api/dtos"
 )
 
 // ControllerHelper provides common functionality for all controllers
@@ -19,7 +19,7 @@ func NewControllerHelper() *ControllerHelper {
 func (h *ControllerHelper) SendErrorResponse(w http.ResponseWriter, statusCode int, code, message, details string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(api.ErrorResponse{
+	json.NewEncoder(w).Encode(dtos.ErrorResponse{
 		Code:    code,
 		Message: message,
 		Details: details,

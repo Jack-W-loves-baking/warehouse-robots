@@ -8,4 +8,5 @@ const (
 	ErrorCodeNoRobots      = "NO_ROBOTS_AVAILABLE"
 	ErrorCodeTaskQueueFull = "TASK_QUEUE_FULL"
 	ErrorCodeInternal      = "INTERNAL_ERROR"
+	ErrorCodeTaskNotFound  = "TASK_NOT_FOUND"
 )

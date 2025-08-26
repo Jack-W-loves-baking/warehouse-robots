@@ -1,10 +1,11 @@
 package binder
 
 import (
-	"warehouse-robots/backend/api/business/facades"
-	"warehouse-robots/backend/api/dtos/sdk"
-	"warehouse-robots/backend/api/v1/controller"
-	"warehouse-robots/backend/api/v1/service"
+	controller "warehouse-robots/backend/api/controller"
+	"warehouse-robots/backend/api/dao"
+	"warehouse-robots/backend/api/manager"
+	"warehouse-robots/backend/api/model"
+	service "warehouse-robots/backend/api/service"
 	"warehouse-robots/backend/infra/sdkService"
 
 	"warehouse-robots/backend/config"
@@ -15,17 +16,22 @@ type Container struct {
 	Config *config.Config
 
 	// SDK Layer
-	RobotSDKService sdk.Warehouse
+	RobotSDKService model.Warehouse
 	SDKFactory      *sdkService.RobotSDKFactory
 
-	// Business Layer Facades
-	CreateTaskFacade facades.ICreateTaskFacade
+	// Repository Layer
+	TaskRepository dao.ITaskRepository
+
+	// Manager Layer
+	TaskMonitor *manager.TaskMonitor
 
 	// Service Layer
-	CreateTaskService service.ICreateTaskService
+	CreateTaskService   service.ICreateTaskService
+	RetrieveTaskService service.IRetrieveTaskService
 
 	// Controller Layer
-	CreateTaskController controller.ICreateTaskController
+	CreateTaskController   controller.ICreateTaskController
+	RetrieveTaskController controller.IRetrieveTaskController
 }
 
 // NewContainer creates and wires all dependencies
@@ -35,7 +41,8 @@ func NewContainer(cfg *config.Config) *Container {
 	}
 
 	container.bindSDKLayer()
-	container.bindBusinessLayer()
+	container.bindDataLayer()
+	container.bindManagerLayer()
 	container.bindServiceLayer()
 	container.bindControllerLayer()
 
@@ -48,17 +55,27 @@ func (c *Container) bindSDKLayer() {
 	c.RobotSDKService = c.SDKFactory.CreateRobotSDKService()
 }
 
-// bindBusinessLayer sets up business logic facades
-func (c *Container) bindBusinessLayer() {
-	c.CreateTaskFacade = facades.NewCreateTaskFacade(c.RobotSDKService)
+// bindDataLayer sets up data access layer
+func (c *Container) bindDataLayer() {
+	// Create the shared repository instance
+	c.TaskRepository = dao.NewInMemoryTaskRepository()
+}
+
+// bindManagerLayer sets up manager layer
+func (c *Container) bindManagerLayer() {
+	// TaskMonitor needs repository
+	c.TaskMonitor = manager.NewTaskMonitor(c.TaskRepository)
 }
 
 // bindServiceLayer sets up service layer
 func (c *Container) bindServiceLayer() {
-	c.CreateTaskService = service.NewCreateTaskService(c.CreateTaskFacade)
+	c.CreateTaskService = service.NewCreateTaskService(c.RobotSDKService,
+		c.TaskRepository)
+	c.RetrieveTaskService = service.NewRetrieveTaskService(c.TaskRepository)
 }
 
 // bindControllerLayer sets up controller layer
 func (c *Container) bindControllerLayer() {
 	c.CreateTaskController = controller.NewCreateTaskController(c.CreateTaskService)
+	c.RetrieveTaskController = controller.NewRetrieveTaskController(c.RetrieveTaskService)
 }

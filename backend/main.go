@@ -23,6 +23,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc(constant.RouteCreateTask, container.CreateTaskController.Handle)
+	mux.HandleFunc(constant.RouteGetTaskById, container.RetrieveTaskController.Handle)
 
 	// Apply middleware stack with configuration
 	handler := middleware.Chain(mux,
