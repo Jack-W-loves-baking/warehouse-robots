@@ -79,7 +79,7 @@ func (tm *TaskMonitor) monitorTask(
 				continue
 			}
 
-			status := model.TaskStatusRunning
+			status := model.TaskStatusPending
 			if task != nil && task.Status == model.TaskStatusCompleted {
 				status = task.Status // Don't override completed status
 			}

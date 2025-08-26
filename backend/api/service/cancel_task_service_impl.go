@@ -30,7 +30,7 @@ func NewCancelTaskService(
 // CancelTaskById cancels a task.
 // Rules:
 //   - If task is TERMINAL (COMPLETED/FAILED/CANCELLED): reject.
-//   - If task is RUNNING or PENDING: attempt SDK CancelTask with retries; on success, stop monitor and mark CANCELLED.
+//   - If task is PENDING: attempt SDK CancelTask with retries; on success, stop monitor and mark CANCELLED.
 //     On repeated failure, mark FAILED with an explanatory error.
 func (s *CancelTaskServiceImpl) CancelTaskById(taskId string) error {
 	task, err := s.repository.GetById(taskId)

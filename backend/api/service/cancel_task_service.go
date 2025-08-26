@@ -2,7 +2,7 @@ package service
 
 // ICancelTaskService LOGIC:
 //   - If the task is already terminal (COMPLETED, FAILED, or CANCELLED): reject.
-//   - If the task is PENDING or RUNNING: invoke the SDK's CancelTask with up to
+//   - If the task is PENDING: invoke the SDK's CancelTask with up to
 //     three retries using backoff.
 //   - On success: stop monitoring and persist status = CANCELLED.
 //   - On repeated failure: we dont do anything.

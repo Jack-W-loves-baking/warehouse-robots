@@ -199,7 +199,7 @@ definitions:
         type: "string"
         description: "Current task status"
         enum:
-            - "RUNNING"      # Processing
+            - "PENDING"      # Processing
             - "COMPLETED"    # Channel closed successfully
             - "FAILED"       # Error received
             - "CANCELLED"    # User cancelled

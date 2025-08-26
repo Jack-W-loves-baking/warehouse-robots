@@ -110,7 +110,7 @@ func (s *CreateTaskServiceImpl) getRobotByID(robotID string) (model.Robot, error
 // calculateStartPosition determines the robot’s starting point when queuing a new task.
 //
 // Policy:
-//   - Only one active task per robot is allowed; if a PENDING/RUNNING task exists, reject.
+//   - Only one active task per robot is allowed; if a PENDING task exists, reject.
 //   - Use the most recent TERMINAL task to derive the next start:
 //   - COMPLETED or FAILED or CANCELLED → use its last known CurrentPosition.
 //   - If no prior task exists, default to (0,0,false).
