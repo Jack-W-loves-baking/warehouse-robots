@@ -23,7 +23,7 @@ func NewMockWarehouse() model.Warehouse {
 	return &MockWarehouse{
 		robots: []model.Robot{robot1},
 		robotMap: map[string]*MockRobot{
-			"facades-1": robot1,
+			"0": robot1,
 		},
 	}
 }
