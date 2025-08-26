@@ -113,7 +113,7 @@ func TestCreateTaskServiceImpl_validateBoundary(t *testing.T) {
 		},
 		{
 			name:        "invalid_west_from_min_x",
-			start:       &model.Position{X: constant.MinCoordinate, Y: 5, HasCrate: false},
+			start:       &model.Position{X: constant.MinCoordinateX, Y: 5, HasCrate: false},
 			commands:    "W",
 			expectError: true,
 			description: "Moving west from minimum X coordinate should violate boundary",
@@ -138,7 +138,7 @@ func TestCreateTaskServiceImpl_validateBoundary(t *testing.T) {
 		},
 		{
 			name:        "invalid_south_from_min_y",
-			start:       &model.Position{X: 5, Y: constant.MinCoordinate, HasCrate: false},
+			start:       &model.Position{X: 5, Y: constant.MinCoordinateY, HasCrate: false},
 			commands:    "S",
 			expectError: true,
 			description: "Moving south from minimum Y coordinate should violate boundary",
