@@ -5,25 +5,23 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	sdk "warehouse-robots/backend/api/dtos/sdk"
+	"warehouse-robots/backend/api/model"
 )
 
 // MockWarehouse implements the sdk.Warehouse interface
 type MockWarehouse struct {
-	robots   []sdk.Robot
+	robots   []model.Robot
 	robotMap map[string]*MockRobot
 }
 
 // for each command, this is the delay in between.
-const stepDelay = time.Second
+const stepDelay = 3 * time.Second
 
-// NewMockWarehouse creates a new mock warehouse with 1 facades as per requirements
-func NewMockWarehouse() sdk.Warehouse {
-	robot1 := NewMockRobot("facades-1", sdk.RobotState{X: 0, Y: 0, HasCrate: true})
+func NewMockWarehouse() model.Warehouse {
+	robot1 := NewMockRobot("0", model.RobotState{X: 0, Y: 0, HasCrate: true})
 
 	return &MockWarehouse{
-		robots: []sdk.Robot{robot1},
+		robots: []model.Robot{robot1},
 		robotMap: map[string]*MockRobot{
 			"facades-1": robot1,
 		},
@@ -31,14 +29,14 @@ func NewMockWarehouse() sdk.Warehouse {
 }
 
 // Robots returns all robots in the warehouse
-func (w *MockWarehouse) Robots() []sdk.Robot {
+func (w *MockWarehouse) Robots() []model.Robot {
 	return w.robots
 }
 
 // MockRobot implements the sdk.Robot interface with realistic behavior
 type MockRobot struct {
 	id           string
-	state        sdk.RobotState
+	state        model.RobotState
 	currentTask  *MockTask
 	taskQueue    []*MockTask
 	allTasks     map[string]*MockTask
@@ -55,12 +53,12 @@ type MockTask struct {
 	Done         chan bool
 	Robot        *MockRobot
 	RemainingCmd []string
-	PositionChan chan sdk.RobotState
+	PositionChan chan model.RobotState
 	ErrorChan    chan error
 }
 
 // NewMockRobot creates a new mock facades
-func NewMockRobot(id string, initialState sdk.RobotState) *MockRobot {
+func NewMockRobot(id string, initialState model.RobotState) *MockRobot {
 	return &MockRobot{
 		id:           id,
 		state:        initialState,
@@ -73,8 +71,8 @@ func NewMockRobot(id string, initialState sdk.RobotState) *MockRobot {
 }
 
 // EnqueueTask implements sdk.Robot interface with realistic task processing
-func (r *MockRobot) EnqueueTask(commands string) (taskID string, position chan sdk.RobotState, err chan error) {
-	posCh := make(chan sdk.RobotState, 10)
+func (r *MockRobot) EnqueueTask(commands string) (taskID string, position chan model.RobotState, err chan error) {
+	posCh := make(chan model.RobotState, 10)
 	errCh := make(chan error, 1)
 
 	// Check if we've reached the maximum queue size (5 tasks total: 1 running + 4 queued)
@@ -136,7 +134,7 @@ func (r *MockRobot) processTaskQueue() {
 }
 
 // executeTask processes the task commands with 1 second delay per command
-func (r *MockRobot) executeTask(task *MockTask, posCh chan sdk.RobotState, errCh chan error) {
+func (r *MockRobot) executeTask(task *MockTask, posCh chan model.RobotState, errCh chan error) {
 	defer close(posCh)
 	defer close(errCh)
 	defer func() {
@@ -238,7 +236,7 @@ func (r *MockRobot) CancelTask(taskID string) error {
 }
 
 // CurrentState returns the current state of the facades
-func (r *MockRobot) CurrentState() sdk.RobotState {
+func (r *MockRobot) CurrentState() model.RobotState {
 	return r.state
 }
 
