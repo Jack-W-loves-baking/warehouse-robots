@@ -199,12 +199,10 @@ definitions:
         type: "string"
         description: "Current task status"
         enum:
-            - "PENDING"      # Just created
-            - "RUNNING"      # First position update received
+            - "RUNNING"      # Processing
             - "COMPLETED"    # Channel closed successfully
             - "FAILED"       # Error received
             - "CANCELLED"    # User cancelled
-            - "TIMEOUT"      # Monitor timeout
         example: "IN_PROGRESS"
       robotId:
         type: "string"
@@ -220,7 +218,7 @@ definitions:
         example: "Robot would move out of bounds"
       currentPosition:
         $ref: "#/definitions/RobotState"
-          
+
   ErrorResponse:
     type: "object"
     required:
