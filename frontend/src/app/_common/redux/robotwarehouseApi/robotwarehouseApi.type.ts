@@ -1,9 +1,9 @@
-interface CreateTaskResponse {
+export interface CreateTaskResponse {
   task_id: string;
   robot_id: string;
   commands: string;
-  status: string;
-  currentState: {
+  status: TaskStatus;
+  current_state: {
     x: number;
     y: number;
     has_crate: boolean;
@@ -13,6 +13,14 @@ interface CreateTaskResponse {
   update_at: string;
 }
 
-interface CreateTaskRequest {
+export interface CreateTaskRequest {
   commands: string;
+  robotId: string;
 }
+
+export type TaskStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "FAILED"
+  | "CANCELLED"
+  | "IDLE";
