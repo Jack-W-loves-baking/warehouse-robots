@@ -43,7 +43,7 @@ func NewCreateTaskService(
 func (s *CreateTaskServiceImpl) CreateTask(robotID string, req dtos.CreateTaskRequest) (*dtos.TaskInfo, error) {
 	robot, err := s.getRobotByID(robotID)
 	if err != nil {
-		log.Printf("robot not found: %w", err)
+		log.Printf("robot not found: %v", err)
 		return nil, model.ErrRobotNotFound
 	}
 
@@ -97,7 +97,7 @@ func (s *CreateTaskServiceImpl) CreateTask(robotID string, req dtos.CreateTaskRe
 func (s *CreateTaskServiceImpl) getRobotByID(robotID string) (model.Robot, error) {
 	robotIndex, err := strconv.Atoi(robotID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid robot ID %q: %w", robotID, err)
+		return nil, fmt.Errorf("invalid robot ID %q: %v", robotID, err)
 	}
 
 	robots := s.warehouse.Robots()

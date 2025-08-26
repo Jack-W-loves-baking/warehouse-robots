@@ -35,7 +35,7 @@ func NewCancelTaskService(
 func (s *CancelTaskServiceImpl) CancelTaskById(taskId string) error {
 	task, err := s.repository.GetById(taskId)
 	if err != nil {
-		log.Printf("get task: %w", err)
+		log.Printf("get task: %v", err)
 		return model.ErrTaskNotFound
 	}
 
@@ -48,7 +48,7 @@ func (s *CancelTaskServiceImpl) CancelTaskById(taskId string) error {
 	case model.TaskStatusPending:
 		robot, err := s.getRobotByRobotID(task.RobotID)
 		if err != nil {
-			log.Printf("resolve robot %q: %w", task.RobotID, err)
+			log.Printf("resolve robot %q: %v", task.RobotID, err)
 			return model.ErrRobotNotFound
 		}
 
@@ -89,7 +89,7 @@ func (s *CancelTaskServiceImpl) getRobotByRobotID(robotID string) (model.Robot, 
 
 	robots := s.warehouse.Robots()
 	if robotIndex < 0 || robotIndex >= len(robots) {
-		log.Printf("robot index %d out of range (0-%d)\", robotIndex, len(robots)-1")
+		log.Printf("robot index %v out of range (0-%d)", robotIndex, len(robots)-1)
 		return nil, model.ErrRobotIDInvalid
 	}
 	return robots[robotIndex], nil
