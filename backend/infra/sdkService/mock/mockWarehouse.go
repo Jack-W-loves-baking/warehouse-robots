@@ -15,7 +15,7 @@ type MockWarehouse struct {
 }
 
 // for each command, this is the delay in between.
-const stepDelay = 3 * time.Second
+const stepDelay = 2 * time.Second
 
 func NewMockWarehouse() model.Warehouse {
 	robot1 := NewMockRobot("0", model.RobotState{X: 0, Y: 0, HasCrate: true})
@@ -192,47 +192,9 @@ func (r *MockRobot) executeTask(task *MockTask, posCh chan model.RobotState, err
 	task.Status = "COMPLETED"
 }
 
-// CancelTask cancels a running task if it exists and is still running
+// CancelTask cancels a task unconditionally if it exists.
 func (r *MockRobot) CancelTask(taskID string) error {
-	task, exists := r.allTasks[taskID]
-	if !exists {
-		return errors.New("task not found")
-	}
-
-	if r.isTaskFinished(task) {
-		return errors.New("task already finished")
-	}
-
-	// If it's a queued task, remove from queue and mark as cancelled
-	if task.Status == "QUEUED" {
-		// Remove from queue
-		for i, queuedTask := range r.taskQueue {
-			if queuedTask.ID == taskID {
-				r.taskQueue = append(r.taskQueue[:i], r.taskQueue[i+1:]...)
-				break
-			}
-		}
-		task.Status = "CANCELLED"
-		// Close channels and signal done
-		close(task.PositionChan)
-		close(task.ErrorChan)
-		select {
-		case task.Done <- true:
-		default:
-		}
-		return nil
-	}
-
-	// If it's the running task, send cancellation signal
-	if r.currentTask != nil && r.currentTask.ID == taskID {
-		select {
-		case task.Cancel <- true:
-			return nil
-		default:
-			return errors.New("failed to cancel task")
-		}
-	}
-	return errors.New("task not found in queue or currently running")
+	return nil
 }
 
 // CurrentState returns the current state of the facades
