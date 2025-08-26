@@ -74,10 +74,13 @@ func (c *Container) bindServiceLayer() {
 	c.CreateTaskService = service.NewCreateTaskService(c.RobotSDKService,
 		c.TaskRepository)
 	c.RetrieveTaskService = service.NewRetrieveTaskService(c.TaskRepository)
+	c.CancelTaskService = service.NewCancelTaskService(c.RobotSDKService,
+		c.TaskRepository)
 }
 
 // bindControllerLayer sets up controller layer
 func (c *Container) bindControllerLayer() {
 	c.CreateTaskController = controller.NewCreateTaskController(c.CreateTaskService)
 	c.RetrieveTaskController = controller.NewRetrieveTaskController(c.RetrieveTaskService)
+	c.CancelTaskController = controller.NewCancelTaskController(c.CancelTaskService)
 }
