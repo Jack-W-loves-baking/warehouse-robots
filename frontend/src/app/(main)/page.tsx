@@ -36,7 +36,7 @@ export default function Home() {
 
       if (
         taskData?.status &&
-        ["COMPLETED", "FAILED"].includes(taskData?.status)
+        ["COMPLETED", "FAILED", "CANCELLED"].includes(taskData?.status)
       ) {
         setPollingInterval(0);
       }
