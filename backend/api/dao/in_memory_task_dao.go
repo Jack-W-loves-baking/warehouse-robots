@@ -7,9 +7,12 @@ import (
 	"warehouse-robots/backend/api/model"
 )
 
+// InMemoryTaskRepository is a thread-safe in-memory implementation of ITaskRepository.
+// It uses a sync.RWMutex to protect concurrent access to the tasks map.
+// This should be replaced with a real database in prod.
 type InMemoryTaskRepository struct {
 	tasks map[string]*model.Task
-	mu    sync.RWMutex
+	mu    sync.RWMutex // protects concurrent reads/writes to tasks
 }
 
 func NewInMemoryTaskRepository() ITaskRepository {
@@ -18,6 +21,9 @@ func NewInMemoryTaskRepository() ITaskRepository {
 	}
 }
 
+// Create adds a new task to the repository.
+// It returns an error if the taskID already exists.
+// A copy of the task is stored to prevent external code from mutating internal state.
 func (r *InMemoryTaskRepository) Create(task *model.Task) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -33,6 +39,7 @@ func (r *InMemoryTaskRepository) Create(task *model.Task) error {
 	return nil
 }
 
+// GetById retrieves a task by ID.
 func (r *InMemoryTaskRepository) GetById(taskID string) (*model.Task, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -52,6 +59,8 @@ func (r *InMemoryTaskRepository) GetById(taskID string) (*model.Task, error) {
 	return &taskCopy, nil
 }
 
+// Update replaces an existing task with the provided one.
+// The task must already exist in the repository.
 func (r *InMemoryTaskRepository) Update(task *model.Task) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -67,6 +76,7 @@ func (r *InMemoryTaskRepository) Update(task *model.Task) error {
 	return nil
 }
 
+// GetByRobotId returns all tasks belonging to a given robot.
 func (r *InMemoryTaskRepository) GetByRobotId(robotID string) ([]*model.Task, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -86,6 +96,7 @@ func (r *InMemoryTaskRepository) GetByRobotId(robotID string) ([]*model.Task, er
 	return tasks, nil
 }
 
+// UpdateStatus updates the status of an existing task.
 func (r *InMemoryTaskRepository) UpdateStatus(taskID string, status model.TaskStatus, errorMsg string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -104,6 +115,7 @@ func (r *InMemoryTaskRepository) UpdateStatus(taskID string, status model.TaskSt
 	return nil
 }
 
+// UpdatePosition updates the current position of the task and its status.
 func (r *InMemoryTaskRepository) UpdatePosition(taskID string, position *model.Position, status model.TaskStatus) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -118,21 +130,4 @@ func (r *InMemoryTaskRepository) UpdatePosition(taskID string, position *model.P
 	task.UpdatedAt = time.Now()
 
 	return nil
-}
-
-func (r *InMemoryTaskRepository) GetAll() ([]*model.Task, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	tasks := make([]*model.Task, 0, len(r.tasks))
-	for _, task := range r.tasks {
-		taskCopy := *task
-		if task.CurrentPosition != nil {
-			posCopy := *task.CurrentPosition
-			taskCopy.CurrentPosition = &posCopy
-		}
-		tasks = append(tasks, &taskCopy)
-	}
-
-	return tasks, nil
 }
