@@ -165,13 +165,13 @@ func (s *CreateTaskServiceImpl) validateBoundary(start *model.Position, commands
 
 		switch cmd {
 		case 'N':
-			y++
+			y += constant.RobotMoveUnit
 		case 'S':
-			y--
+			y -= constant.RobotMoveUnit
 		case 'E':
-			x++
+			x += constant.RobotMoveUnit
 		case 'W':
-			x--
+			x -= constant.RobotMoveUnit
 		}
 
 		if x < minX {

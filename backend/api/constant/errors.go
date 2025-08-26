@@ -3,7 +3,6 @@ package constant
 // Error codes
 const (
 	// Request/validation
-	ErrorCodeInvalidJSON    = "INVALID_JSON"
 	ErrorCodeValidation     = "VALIDATION_ERROR"
 	ErrorCodeBoundary       = "BOUNDARY_ERROR"
 	ErrorCodeRobotIdInvalid = "ROBOT_ID_INVALID"
@@ -13,9 +12,8 @@ const (
 	ErrorCodeRobotNotFound = "ROBOT_NOT_FOUND"
 
 	// State
-	ErrorCodeRobotBusy        = "ROBOT_BUSY"
-	ErrorCodeTaskAlreadyDone  = "TASK_ALREADY_TERMINAL"
-	ErrorCodeCancelNotAllowed = "CANCEL_NOT_ALLOWED"
+	ErrorCodeRobotBusy       = "ROBOT_BUSY"
+	ErrorCodeTaskAlreadyDone = "TASK_ALREADY_TERMINAL"
 
 	// Queue/capacity
 	ErrorCodeTaskQueueFull = "TASK_QUEUE_FULL"

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"warehouse-robots/backend/api/constant"
 	"warehouse-robots/backend/api/model"
 )
 
@@ -169,13 +170,13 @@ func (r *MockRobot) executeTask(task *MockTask, posCh chan model.RobotState, err
 		// Execute command (with boundary checks)
 		switch cmd {
 		case 'N':
-			r.state.Y++
+			r.state.Y += constant.RobotMoveUnit
 		case 'S':
-			r.state.Y--
+			r.state.Y -= constant.RobotMoveUnit
 		case 'E':
-			r.state.X++
+			r.state.X += constant.RobotMoveUnit
 		case 'W':
-			r.state.X--
+			r.state.X -= constant.RobotMoveUnit
 		}
 
 		// Update remaining commands
