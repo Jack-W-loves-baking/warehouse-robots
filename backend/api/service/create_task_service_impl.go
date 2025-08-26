@@ -155,8 +155,8 @@ func (s *CreateTaskServiceImpl) validateBoundary(start *model.Position, commands
 
 	maxX := constant.WarehouseSizeX - 1
 	maxY := constant.WarehouseSizeY - 1
-	minX := 0
-	minY := 0
+	minX := constant.MinCoordinate
+	minY := constant.MinCoordinate
 
 	commands = strings.ToUpper(strings.ReplaceAll(commands, " ", ""))
 
