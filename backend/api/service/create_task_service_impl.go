@@ -80,6 +80,8 @@ func (s *CreateTaskServiceImpl) CreateTask(robotID string, req dtos.CreateTaskRe
 		return nil, err
 	}
 
+	// Everytime we create a new task,
+	// we will create a goroutine to listen to the channel and update the new position on our database
 	s.taskMonitor.StartMonitoring(taskID, posCh, errCh)
 
 	return &dtos.TaskInfo{

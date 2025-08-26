@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -10,7 +9,9 @@ import (
 	"warehouse-robots/backend/api/model"
 )
 
-// TaskMonitor manages background goroutines that listen to channels
+// TaskMonitor manages the lifecycle of goroutines that watch robot task channels.
+// It ensures updates (status, position, errors) are persisted into the repository
+// and provides graceful shutdown.
 type TaskMonitor struct {
 	repository dao.ITaskRepository
 	monitors   map[string]context.CancelFunc
@@ -25,7 +26,9 @@ func NewTaskMonitor(repo dao.ITaskRepository) *TaskMonitor {
 	}
 }
 
-// StartMonitoring starts a goroutine to monitor task channels
+// StartMonitoring creates a goroutine that listens for position and error events
+// from a robot task. It registers a cancel function to allow external shutdown.
+// Each monitor has a maximum lifetime of 30 minutes.
 func (tm *TaskMonitor) StartMonitoring(
 	taskID string,
 	positionChan <-chan model.RobotState,
@@ -37,11 +40,14 @@ func (tm *TaskMonitor) StartMonitoring(
 	tm.monitors[taskID] = cancel
 	tm.mu.Unlock()
 
+	// Increment WaitGroup counter before starting the goroutine.
+	// This ensures Shutdown() can wait for this monitor to exit
 	tm.wg.Add(1)
 	go tm.monitorTask(ctx, taskID, positionChan, errorChan)
 }
 
 // monitorTask is the goroutine that listens to channels
+// It updates task state in the repository until the task completes, fails, or times out.
 func (tm *TaskMonitor) monitorTask(
 	ctx context.Context,
 	taskID string,
@@ -88,7 +94,6 @@ func (tm *TaskMonitor) monitorTask(
 			if err != nil {
 				fmt.Printf("Error updating position for task %s: %v\n", taskID, err)
 			}
-			tm.printTaskSnapshot(taskID)
 
 		case err, ok := <-errorChan:
 			if ok && err != nil {
@@ -114,6 +119,7 @@ func (tm *TaskMonitor) monitorTask(
 	}
 }
 
+// cleanup removes the monitor for a task and cancels its context.
 func (tm *TaskMonitor) cleanup(taskID string) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
@@ -124,7 +130,7 @@ func (tm *TaskMonitor) cleanup(taskID string) {
 	}
 }
 
-// CancelTask cancels monitoring for a specific task
+// CancelTask stops monitoring and cancels the task explicitly.
 func (tm *TaskMonitor) CancelTask(taskID string) error {
 	tm.mu.Lock()
 
@@ -164,14 +170,4 @@ func (tm *TaskMonitor) Shutdown(ctx context.Context) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	}
-}
-
-func (tm *TaskMonitor) printTaskSnapshot(taskID string) {
-	task, err := tm.repository.GetById(taskID)
-	if err != nil {
-		fmt.Printf("[task %s] snapshot error: %v\n", taskID, err)
-		return
-	}
-	b, _ := json.MarshalIndent(task, "", "  ")
-	fmt.Printf("[task %s] %s\n", taskID, string(b))
 }
